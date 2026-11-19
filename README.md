@@ -2,6 +2,13 @@
 
 把 EmoteLab 角色作为桌面宠物运行在 Windows 桌面上。基于 Electron + TypeScript + PIXI v7 + Spine 4.3。
 
+## 下载
+
+到 [Releases](https://github.com/potatochips0078-ui/emotelab-pet/releases/latest) 下载最新版本，仅支持 Windows x64：
+
+- `Emotelab.Pet.Setup.0.1.0.exe` — 安装版（推荐）
+- `Emotelab.Pet.0.1.0.exe` — 免安装便携版
+
 ## 功能
 
 - **Spine 角色渲染**：按 `character.json` 的 `ActiveSkins` 组合皮肤，按 `SlotGroups` 染色
