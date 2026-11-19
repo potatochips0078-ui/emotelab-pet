@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Emotelab Pet</title>
+    <style>
+      html, body, #app {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: transparent;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+      body {
+        pointer-events: auto;
+      }
+      #rename {
+        position: fixed;
+        left: 50%;
+        bottom: 14px;
+        transform: translateX(-50%);
+        width: 268px;
+        box-sizing: border-box;
+        padding: 12px;
+        border-radius: 10px;
+        background: rgba(30, 30, 36, 0.94);
+        color: #f3f3f7;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        font: 13px/1.4 "Microsoft YaHei", system-ui, sans-serif;
+        -webkit-user-select: auto;
+        user-select: auto;
+      }
+      #rename[hidden] {
+        display: none;
+      }
+      #rename .title {
+        margin-bottom: 8px;
+        opacity: 0.8;
+      }
+      #rename input {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 6px 8px;
+        border: 1px solid #55555f;
+        border-radius: 6px;
+        background: #1b1b20;
+        color: inherit;
+        font: inherit;
+        outline: none;
+      }
+      #rename input:focus {
+        border-color: #6b9cff;
+      }
+      #rename .actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 10px;
+      }
+      #rename button {
+        padding: 4px 12px;
+        border: 0;
+        border-radius: 6px;
+        background: #3a3a44;
+        color: inherit;
+        font: inherit;
+        cursor: pointer;
+      }
+      #rename button.primary {
+        background: #4c7dff;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <div id="rename" hidden>
+      <div class="title">重命名角色</div>
+      <input id="rename-input" type="text" maxlength="24" spellcheck="false" />
+      <div class="actions">
+        <button id="rename-cancel">取消</button>
+        <button id="rename-ok" class="primary">确定</button>
+      </div>
+    </div>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

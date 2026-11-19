@@ -1,0 +1,20 @@
+node_modules/
+out/
+dist/
+builds/
+.screenshots/
+.trae-html-share-packages/
+
+# 运行时产物
+app/pet-config.json
+pet-data/
+*.log
+__pycache__/
+*.pyc
+
+# 本地排查用的临时分析数据
+ear-*.json
+
+.env
+.env.local
+.DS_Store

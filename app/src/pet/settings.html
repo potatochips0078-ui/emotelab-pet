@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>设置 - Emotelab Pet</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #191920;
+        --panel: #22222b;
+        --panel-2: #272731;
+        --border: #32323e;
+        --text: #ececf3;
+        --muted: #9a9aab;
+        --accent: #5b8cff;
+        --accent-soft: rgba(91, 140, 255, 0.16);
+        --danger: #ff6b6b;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+      }
+
+      body {
+        display: flex;
+        background: var(--bg);
+        color: var(--text);
+        font: 13px/1.5 "Microsoft YaHei UI", "Microsoft YaHei", system-ui, sans-serif;
+        -webkit-user-select: none;
+        user-select: none;
+        overflow: hidden;
+      }
+
+      /* --- 侧边导航 --- */
+      aside {
+        display: flex;
+        flex-direction: column;
+        flex: 0 0 172px;
+        padding: 18px 12px;
+        border-right: 1px solid var(--border);
+        background: #1c1c24;
+      }
+
+      .brand {
+        padding: 4px 10px 18px;
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0.2px;
+        color: #cdd3e6;
+      }
+
+      .brand small {
+        display: block;
+        margin-top: 2px;
+        font-size: 11px;
+        font-weight: 400;
+        color: var(--muted);
+      }
+
+      nav {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      nav button {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        padding: 9px 11px;
+        border: 0;
+        border-radius: 9px;
+        background: transparent;
+        color: var(--muted);
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+        transition: background 0.15s, color 0.15s;
+      }
+
+      nav button:hover {
+        background: #262631;
+        color: var(--text);
+      }
+
+      nav button.active {
+        background: var(--accent-soft);
+        color: #dfe7ff;
+      }
+
+      nav button svg {
+        width: 16px;
+        height: 16px;
+        flex: none;
+        opacity: 0.9;
+      }
+
+      .side-foot {
+        margin-top: auto;
+        padding: 10px;
+        font-size: 11px;
+        line-height: 1.6;
+        color: #6d6d7e;
+      }
+
+      /* --- 内容区 --- */
+      main {
+        flex: 1;
+        min-width: 0;
+        padding: 26px 30px 34px;
+        overflow-y: auto;
+      }
+
+      main::-webkit-scrollbar {
+        width: 10px;
+      }
+
+      main::-webkit-scrollbar-thumb {
+        border: 3px solid var(--bg);
+        border-radius: 6px;
+        background: #3a3a47;
+      }
+
+      section[hidden] {
+        display: none;
+      }
+
+      h1 {
+        margin: 0 0 4px;
+        font-size: 19px;
+        font-weight: 600;
+      }
+
+      .lead {
+        margin: 0 0 20px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      h2 {
+        margin: 24px 0 10px;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.4px;
+        color: var(--muted);
+        text-transform: uppercase;
+      }
+
+      .card {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: var(--panel);
+        overflow: hidden;
+      }
+
+      /* 当前角色 */
+      .current {
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        padding: 16px;
+        border: 1px solid #3a4360;
+        border-radius: 12px;
+        background: linear-gradient(135deg, rgba(91, 140, 255, 0.14), rgba(91, 140, 255, 0.03));
+      }
+
+      .avatar {
+        display: grid;
+        place-items: center;
+        flex: none;
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        background: linear-gradient(145deg, #5b8cff, #7f6bff);
+        color: #fff;
+        font-size: 17px;
+        font-weight: 600;
+      }
+
+      .current .meta,
+      .item .meta {
+        min-width: 0;
+        flex: 1;
+      }
+
+      .name {
+        font-size: 14px;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .sub {
+        margin-top: 2px;
+        font-size: 11.5px;
+        color: var(--muted);
+      }
+
+      .badge {
+        flex: none;
+        padding: 3px 9px;
+        border-radius: 999px;
+        background: rgba(91, 140, 255, 0.2);
+        color: #a9c2ff;
+        font-size: 11px;
+      }
+
+      /* 角色列表 */
+      .list {
+        display: flex;
+        flex-direction: column;
+        padding: 4px;
+      }
+
+      .item {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        padding: 10px 12px;
+        border-radius: 9px;
+      }
+
+      .item + .item {
+        border-top: 1px solid #2c2c36;
+        border-radius: 0;
+      }
+
+      .item:hover {
+        background: #262631;
+      }
+
+      .item .avatar {
+        width: 30px;
+        height: 30px;
+        border-radius: 9px;
+        font-size: 13px;
+        background: #3a3a4a;
+        color: #c3c3d4;
+      }
+
+      .item.current .avatar {
+        background: linear-gradient(145deg, #5b8cff, #7f6bff);
+        color: #fff;
+      }
+
+      .item-actions {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex: none;
+      }
+
+      button.ghost,
+      button.primary,
+      button.danger {
+        padding: 6px 12px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: #2b2b36;
+        color: #dcdce6;
+        font: inherit;
+        font-size: 12px;
+        cursor: pointer;
+        transition: background 0.15s, border-color 0.15s, opacity 0.15s;
+        white-space: nowrap;
+      }
+
+      button.ghost:hover {
+        background: #34343f;
+      }
+
+      button.primary {
+        border-color: transparent;
+        background: var(--accent);
+        color: #fff;
+      }
+
+      button.primary:hover {
+        background: #6d9aff;
+      }
+
+      button.danger {
+        color: var(--danger);
+      }
+
+      button.danger:hover {
+        background: rgba(255, 107, 107, 0.12);
+        border-color: rgba(255, 107, 107, 0.35);
+      }
+
+      button:disabled {
+        opacity: 0.45;
+        cursor: default;
+      }
+
+      .row-actions {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 12px;
+      }
+
+      /* 重命名输入 */
+      .rename-input {
+        flex: 1;
+        min-width: 0;
+        padding: 5px 8px;
+        border: 1px solid var(--accent);
+        border-radius: 7px;
+        background: #1b1b22;
+        color: var(--text);
+        font: inherit;
+        outline: none;
+        -webkit-user-select: text;
+        user-select: text;
+      }
+
+      /* 设置行 */
+      .setting {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        padding: 14px 16px;
+      }
+
+      .setting + .setting {
+        border-top: 1px solid #2c2c36;
+      }
+
+      .setting .label {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .setting .label strong {
+        display: block;
+        font-size: 13px;
+        font-weight: 500;
+      }
+
+      .setting .label span {
+        display: block;
+        margin-top: 2px;
+        font-size: 11.5px;
+        color: var(--muted);
+      }
+
+      .setting .control {
+        flex: none;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      /* 开关 */
+      .switch {
+        position: relative;
+        width: 40px;
+        height: 22px;
+        flex: none;
+      }
+
+      .switch input {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        opacity: 0;
+        cursor: pointer;
+        z-index: 1;
+      }
+
+      .switch i {
+        position: absolute;
+        inset: 0;
+        border-radius: 11px;
+        background: #3a3a46;
+        transition: background 0.18s;
+      }
+
+      .switch i::after {
+        content: "";
+        position: absolute;
+        left: 3px;
+        top: 3px;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: #fff;
+        transition: transform 0.18s;
+      }
+
+      .switch input:checked + i {
+        background: var(--accent);
+      }
+
+      .switch input:checked + i::after {
+        transform: translateX(18px);
+      }
+
+      .switch input:disabled + i {
+        opacity: 0.4;
+      }
+
+      /* 滑杆 */
+      .slider-line {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+      }
+
+      input[type="range"] {
+        -webkit-appearance: none;
+        appearance: none;
+        flex: 1;
+        height: 4px;
+        border-radius: 2px;
+        background: #3b3b48;
+        outline: none;
+      }
+
+      input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        border: 3px solid var(--accent);
+        background: #fff;
+        cursor: pointer;
+      }
+
+      .value {
+        flex: none;
+        min-width: 52px;
+        padding: 3px 8px;
+        border-radius: 6px;
+        background: #2b2b36;
+        color: #cfd6ea;
+        font-size: 11.5px;
+        text-align: center;
+        font-variant-numeric: tabular-nums;
+      }
+
+      input[type="number"] {
+        width: 62px;
+        padding: 5px 7px;
+        border: 1px solid var(--border);
+        border-radius: 7px;
+        background: #1b1b22;
+        color: var(--text);
+        font: inherit;
+        text-align: center;
+        outline: none;
+        -webkit-user-select: text;
+        user-select: text;
+      }
+
+      input[type="number"]:focus {
+        border-color: var(--accent);
+      }
+
+      input[type="number"]:disabled {
+        opacity: 0.45;
+      }
+
+      .unit {
+        color: var(--muted);
+        font-size: 11.5px;
+      }
+
+      .tipline {
+        margin-top: 10px;
+        padding: 10px 12px;
+        border-radius: 9px;
+        background: #1e1e27;
+        color: var(--muted);
+        font-size: 11.5px;
+      }
+
+      /* 创意工坊 */
+      .section-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin: 24px 0 10px;
+      }
+
+      .section-head h2 {
+        margin: 0;
+      }
+
+      .workshop-preview {
+        flex: none;
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        object-fit: cover;
+        background: #2b2b36;
+      }
+
+      .workshop-placeholder {
+        display: grid;
+        place-items: center;
+        flex: none;
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        background: #2b2b36;
+        color: var(--muted);
+        font-size: 16px;
+      }
+
+      .empty-row {
+        padding: 14px 12px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <aside>
+      <div class="brand">Emotelab Pet<small>偏好设置</small></div>
+      <nav>
+        <button type="button" data-tab="characters" class="active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <circle cx="12" cy="8" r="3.4" />
+            <path d="M4.8 20c0-3.6 3.2-6.2 7.2-6.2s7.2 2.6 7.2 6.2" stroke-linecap="round" />
+          </svg>
+          角色
+        </button>
+        <button type="button" data-tab="appearance">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <rect x="3.5" y="4.5" width="17" height="12" rx="2.4" />
+            <path d="M8 20h8" stroke-linecap="round" />
+          </svg>
+          外观
+        </button>
+        <button type="button" data-tab="behavior">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M13 3 5 13.2h5.2L10.6 21 19 10.6h-5.3z" stroke-linejoin="round" />
+          </svg>
+          行为
+        </button>
+        <button type="button" data-tab="position">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M12 21s6.5-5.6 6.5-10.4A6.5 6.5 0 0 0 5.5 10.6C5.5 15.4 12 21 12 21z" />
+            <circle cx="12" cy="10.4" r="2.3" />
+          </svg>
+          位置
+        </button>
+      </nav>
+      <div class="side-foot">修改会立即生效<br />并自动保存</div>
+    </aside>
+
+    <main>
+      <section id="tab-characters">
+        <h1>角色</h1>
+        <p class="lead">选择桌面上显示的角色，或导入 EmoteLab 导出的外观预设 JSON / 完整角色目录。</p>
+
+        <div class="current">
+          <div class="avatar" id="current-avatar">没</div>
+          <div class="meta">
+            <div class="name" id="current-name">没想好</div>
+            <div class="sub" id="current-sub">内置角色</div>
+          </div>
+          <span class="badge">使用中</span>
+        </div>
+
+        <div class="section-head">
+          <h2>当前阵容</h2>
+          <span class="sub" id="stage-count">1 / 6</span>
+        </div>
+        <div class="card">
+          <div class="list" id="stage-list"></div>
+        </div>
+
+        <h2>角色列表</h2>
+        <div class="card">
+          <div class="list" id="character-list"></div>
+        </div>
+
+        <div class="row-actions">
+          <button type="button" class="primary" id="import-btn">导入角色…</button>
+        </div>
+
+        <div class="section-head">
+          <h2>Steam 创意工坊</h2>
+          <button type="button" class="ghost" id="workshop-refresh">刷新</button>
+        </div>
+        <div class="card">
+          <div class="list" id="workshop-list">
+            <div class="empty-row">正在扫描创意工坊内容…</div>
+          </div>
+        </div>
+        <div class="tipline" id="workshop-tip" hidden></div>
+      </section>
+
+      <section id="tab-appearance" hidden>
+        <h1>外观</h1>
+        <p class="lead">调整角色大小和显示方式，角色位置不会因此改变。</p>
+
+        <div class="card">
+          <div class="setting">
+            <div class="label">
+              <strong>角色大小</strong>
+              <span>越大占用的桌面空间越多</span>
+            </div>
+            <div class="control">
+              <div class="slider-line">
+                <input type="range" id="size-range" min="240" max="600" step="10" />
+                <span class="value" id="size-value">400 px</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="setting">
+            <div class="label">
+              <strong>始终置顶</strong>
+              <span>让角色显示在其他窗口之上</span>
+            </div>
+            <div class="control">
+              <label class="switch">
+                <input type="checkbox" id="always-on-top" />
+                <i></i>
+              </label>
+            </div>
+          </div>
+
+          <div class="setting">
+            <div class="label">
+              <strong>显示角色</strong>
+              <span>关闭后角色会隐藏，可从托盘菜单重新显示</span>
+            </div>
+            <div class="control">
+              <label class="switch">
+                <input type="checkbox" id="visible" />
+                <i></i>
+              </label>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="tab-behavior" hidden>
+        <h1>行为</h1>
+        <p class="lead">控制角色空闲时和点击时的动作表现。</p>
+
+        <div class="card">
+          <div class="setting">
+            <div class="label">
+              <strong>闲置时自动播放动作</strong>
+              <span>每隔一段时间随机播放一段动作</span>
+            </div>
+            <div class="control">
+              <label class="switch">
+                <input type="checkbox" id="auto-actions" />
+                <i></i>
+              </label>
+            </div>
+          </div>
+
+          <div class="setting">
+            <div class="label">
+              <strong>随机间隔</strong>
+              <span>两次自动动作之间的等待时间</span>
+            </div>
+            <div class="control">
+              <input type="number" id="auto-min" min="5" max="595" step="1" />
+              <span class="unit">至</span>
+              <input type="number" id="auto-max" min="10" max="600" step="1" />
+              <span class="unit">秒</span>
+            </div>
+          </div>
+
+          <div class="setting">
+            <div class="label">
+              <strong>点击时播放动作</strong>
+              <span>左键单击角色时随机播放一段动作</span>
+            </div>
+            <div class="control">
+              <label class="switch">
+                <input type="checkbox" id="click-action" />
+                <i></i>
+              </label>
+            </div>
+          </div>
+
+          <div class="setting">
+            <div class="label">
+              <strong>拖拽弹跳</strong>
+              <span>拎起角色甩出去，会弹跳并落在任务栏上</span>
+            </div>
+            <div class="control">
+              <label class="switch">
+                <input type="checkbox" id="throw-physics" />
+                <i></i>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="tipline">间隔范围为 5 到 600 秒，结束动作后角色会回到待机。</div>
+      </section>
+
+      <section id="tab-position" hidden>
+        <h1>位置</h1>
+        <p class="lead">角色会记住最后停留的位置，也可以一键放回默认位置。</p>
+
+        <div class="card">
+          <div class="setting">
+            <div class="label">
+              <strong>重置到默认位置</strong>
+              <span>移动角色到主屏幕右下角</span>
+            </div>
+            <div class="control">
+              <button type="button" class="ghost" id="reset-position">重置位置</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="tipline">拖动角色即可调整位置，拖动结束时自动保存。</div>
+      </section>
+    </main>
+
+    <script type="module" src="./settings.ts"></script>
+  </body>
+</html>

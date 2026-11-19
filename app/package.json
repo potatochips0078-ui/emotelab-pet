@@ -1,0 +1,70 @@
+{
+  "name": "emotelab-pet",
+  "version": "0.1.0",
+  "description": "Emotelab character desktop pet",
+  "main": "./out/main/index.js",
+  "author": "Emotelab Pet contributors",
+  "license": "MIT",
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
+    "typecheck": "vue-tsc --noEmit && echo OK",
+    "dist": "npm run build && electron-builder"
+  },
+  "dependencies": {
+    "@esotericsoftware/spine-pixi-v7": "^4.3.13",
+    "pixi.js": "^7.4.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@vitejs/plugin-vue": "^5.0.3",
+    "electron": "43.3.0",
+    "electron-builder": "^24.13.3",
+    "electron-vite": "^2.0.0",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.12",
+    "vue": "^3.4.0",
+    "vue-tsc": "^2.2.0"
+  },
+  "build": {
+    "appId": "com.emotelab.pet",
+    "productName": "Emotelab Pet",
+    "directories": {
+      "output": "../builds"
+    },
+    "electronDist": "node_modules/electron/dist",
+    "asar": true,
+    "files": [
+      "out/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "resources/default-character/icon.png",
+        "to": "icon.png"
+      }
+    ],
+    "win": {
+      "icon": "resources/default-character/icon.png",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    }
+  }
+}
