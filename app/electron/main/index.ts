@@ -980,19 +980,19 @@ function refreshTrayMenu(): void {
   tray?.setContextMenu(Menu.buildFromTemplate(trayTemplate()))
 }
 
-/** 轻量气泡提示：优先托盘气泡，托盘不可用时退回系统通知 */
+/** 轻量气泡提示：优先系统通知，托盘气泡在某些 Windows 环境下会阻塞主进程 */
 function notify(title: string, content: string): void {
   try {
+    if (Notification.isSupported()) {
+      new Notification({ title, body: content, icon: appIconPath() }).show()
+      return
+    }
     if (process.platform === 'win32' && tray && !tray.isDestroyed()) {
       tray.displayBalloon({
         title,
         content,
         icon: nativeImage.createFromPath(appIconPath()),
       })
-      return
-    }
-    if (Notification.isSupported()) {
-      new Notification({ title, body: content, icon: appIconPath() }).show()
     }
   } catch (e) {
     console.warn('[Pet] notify failed', e)
@@ -1457,12 +1457,16 @@ ipcMain.handle('settings:add-instance', (_e, characterId: string) => {
   return settingsState()
 })
 
-/** 把非主角色从桌面移除 */
+/** 移除任意一只角色实例；至少保留一只，避免桌面与托盘失去当前角色 */
 ipcMain.handle('settings:remove-instance', (_e, instanceId: string) => {
   const stage = ensureStage()
   const index = stage.findIndex((s) => s.id === String(instanceId ?? ''))
-  if (index > 0) {
+  if (index >= 0 && stage.length > 1) {
     stage.splice(index, 1)
+    // 阵容顺序没有实际含义，旧字段统一跟随第一只，仅供托盘/旧配置使用
+    config.currentCharacter = stage[0].characterId
+    config.centerX = stage[0].x
+    config.centerY = stage[0].y
     persistConfig()
     broadcastStage()
     refreshTrayMenu()

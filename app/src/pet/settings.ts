@@ -294,20 +294,6 @@ function bindPosition(): void {
   })
 }
 
-function renderCurrent(): void {
-  if (!state) return
-  const current =
-    state.characters.find((c) => c.id === state!.currentCharacter) ?? state.characters[0]
-  if (!current) return
-  el('current-avatar').textContent = initial(current.name)
-  el('current-name').textContent = current.name
-  el('current-sub').textContent = current.workshop
-    ? '创意工坊角色'
-    : current.id === 'default'
-      ? '内置角色'
-      : '导入角色'
-}
-
 function commitRename(id: string, name: string, cancelled: () => boolean): void {
   if (cancelled()) return
   editingId = null
@@ -368,24 +354,30 @@ function renderStage(): void {
     name.textContent = item.name
     const sub = document.createElement('div')
     sub.className = 'sub'
-    sub.textContent = item.primary ? '主角色 · 使用与切换作用于这一只' : '桌面上'
+    // 阵容顺序无意义，所有实例一视同仁
+    sub.textContent = '桌面上'
     meta.append(name, sub)
     row.appendChild(meta)
 
-    if (!item.primary) {
-      const actions = document.createElement('div')
-      actions.className = 'item-actions'
-      const removeBtn = document.createElement('button')
-      removeBtn.type = 'button'
-      removeBtn.className = 'danger'
-      removeBtn.textContent = '移除'
-      removeBtn.addEventListener('click', async () => {
+    const actions = document.createElement('div')
+    actions.className = 'item-actions'
+    const removeBtn = document.createElement('button')
+    removeBtn.type = 'button'
+    removeBtn.className = 'danger'
+    removeBtn.textContent = '移除'
+    // 至少保留一只：全部移除会让托盘/右键菜单失去当前角色
+    removeBtn.disabled = stage.length <= 1
+    removeBtn.addEventListener('click', async () => {
+      removeBtn.disabled = true
+      try {
         state = await window.settingsAPI.removeInstance(item.id)
         render()
-      })
-      actions.appendChild(removeBtn)
-      row.appendChild(actions)
-    }
+      } finally {
+        removeBtn.disabled = false
+      }
+    })
+    actions.appendChild(removeBtn)
+    row.appendChild(actions)
 
     list.appendChild(row)
   }
@@ -395,7 +387,6 @@ function renderCharacters(force = false): void {
   if (!state) return
   const signature = JSON.stringify([
     state.characters,
-    state.currentCharacter,
     editingId,
     (state.stage ?? []).map((s) => `${s.characterId}:${s.id}`),
   ])
@@ -406,9 +397,8 @@ function renderCharacters(force = false): void {
   list.textContent = ''
 
   for (const character of state.characters) {
-    const isCurrent = character.id === state.currentCharacter
     const item = document.createElement('div')
-    item.className = `item${isCurrent ? ' current' : ''}`
+    item.className = 'item'
 
     const avatar = document.createElement('div')
     avatar.className = 'avatar'
@@ -448,35 +438,22 @@ function renderCharacters(force = false): void {
     name.textContent = character.name
     const sub = document.createElement('div')
     sub.className = 'sub'
-    const base = isCurrent
-      ? '正在使用'
-      : character.id === 'default'
+    const base =
+      character.id === 'default'
         ? '内置角色'
         : character.workshop
           ? '创意工坊角色'
           : character.preset
             ? '外观预设'
             : '已导入'
-    // 已上场的角色在列表里也标出来，避免看不出默认主角色就在桌上
+    // 已上场的角色在列表里也标出来，方便对照「当前阵容」
     const onStage = (state.stage ?? []).filter((s) => s.characterId === character.id).length
-    sub.textContent =
-      !isCurrent && onStage > 0 ? `${base} · 已上场${onStage > 1 ? ` ×${onStage}` : ''}` : base
+    sub.textContent = onStage > 0 ? `${base} · 已上场${onStage > 1 ? ` ×${onStage}` : ''}` : base
     meta.append(name, sub)
     item.appendChild(meta)
 
     const actions = document.createElement('div')
     actions.className = 'item-actions'
-
-    const useBtn = document.createElement('button')
-    useBtn.type = 'button'
-    useBtn.className = 'ghost'
-    useBtn.textContent = isCurrent ? '使用中' : '使用'
-    useBtn.disabled = isCurrent
-    useBtn.addEventListener('click', async () => {
-      state = await window.settingsAPI.switchCharacter(character.id)
-      render()
-    })
-    actions.appendChild(useBtn)
 
     const addBtn = document.createElement('button')
     addBtn.type = 'button'
@@ -541,7 +518,6 @@ function renderBehavior(): void {
 
 function render(): void {
   if (!state) return
-  renderCurrent()
   renderStage()
   renderCharacters()
   renderAppearance()
