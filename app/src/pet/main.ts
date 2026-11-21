@@ -322,6 +322,9 @@ async function reloadInstance(
   clearAutoTimer(inst)
   inst.squash.active = false
   stopMotion(inst)
+  // 先在销毁前摘出实例表：destroy 后 Spine 的 transform 为 null，
+  // 若它仍在表里，ticker 下一帧读 inst.spine.scale 会抛错并把整个渲染循环停住
+  instances.splice(index, 1)
   app.stage.removeChild(inst.spine)
   inst.spine.destroy({ children: true, texture: false, baseTexture: false })
   inst.disposeAssets()
@@ -335,6 +338,7 @@ async function reloadInstance(
     inst.insets = { left: 0.35, right: 0.35, top: 0.42, bottom: 0.42 }
     setupIdle(inst)
     app.stage.addChildAt(inst.spine, Math.min(index, app.stage.children.length))
+    instances.splice(Math.min(index, instances.length), 0, inst)
     fitSpine(inst)
     moveCharacter(inst, local.x, local.y)
     measureVisualInsets(inst)
