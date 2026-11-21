@@ -1,6 +1,6 @@
 {
   "name": "emotelab-pet",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Emotelab character desktop pet",
   "main": "./out/main/index.js",
   "author": "Emotelab Pet contributors",
@@ -32,7 +32,7 @@
     "vue-tsc": "^2.2.0"
   },
   "build": {
-    "appId": "com.emotelab.pet",
+    "appId": "com.emotelab.pet.desktop",
     "productName": "Emotelab Pet",
     "directories": {
       "output": "../builds"

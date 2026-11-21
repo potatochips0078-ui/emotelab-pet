@@ -184,8 +184,10 @@ function ensureWritableUserData(): void {
 
 ensureWritableUserData()
 
-// Windows 原生 toast 需要显式 AUMID，且需与 electron-builder 的 appId 保持一致
-if (process.platform === 'win32') app.setAppUserModelId('com.emotelab.pet')
+// Windows 原生 toast 需要显式 AUMID，且需与 electron-builder 的 appId 保持一致。
+// 只在打包后设置：开发态用的是 electron.exe，共用同一 AUMID 会让任务栏把
+// Electron 默认图标缓存到该应用身份上，安装版就显示成默认图标了。
+if (process.platform === 'win32' && app.isPackaged) app.setAppUserModelId('com.emotelab.pet.desktop')
 
 // 单实例：再次启动时由已运行的实例把窗口带到前台
 if (!app.requestSingleInstanceLock()) {

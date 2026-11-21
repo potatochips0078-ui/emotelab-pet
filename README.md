@@ -6,8 +6,8 @@
 
 到 [Releases](https://github.com/potatochips0078-ui/emotelab-pet/releases/latest) 下载最新版本，仅支持 Windows x64：
 
-- `Emotelab.Pet.Setup.0.1.0.exe` — 安装版（推荐）
-- `Emotelab.Pet.0.1.0.exe` — 免安装便携版
+- `Emotelab.Pet.Setup.0.1.1.exe` — 安装版（推荐）
+- `Emotelab.Pet.0.1.1.exe` — 免安装便携版
 
 ## 功能
 
@@ -39,8 +39,8 @@ npm run dist
 
 产物输出到根目录 `builds/`：
 
-- `Emotelab Pet Setup 0.1.0.exe`（NSIS 安装包）
-- `Emotelab Pet 0.1.0.exe`（免安装 portable 版）
+- `Emotelab Pet Setup 0.1.1.exe`（NSIS 安装包）
+- `Emotelab Pet 0.1.1.exe`（免安装 portable 版）
 - `win-unpacked/`（未打包目录，便于调试）
 
 打包产物不入库，发布时请上传到 GitHub Releases。
