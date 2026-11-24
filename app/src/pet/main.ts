@@ -356,8 +356,10 @@ function setupIdle(inst: PetInstance): void {
 
   inst.idleAnimation = idle?.name ?? IDLE_ANIMATION
   inst.currentAnimation = inst.idleAnimation
+  // 只有 ANIM/ 是完整的身体动作。CHAR/ 是单个捏脸参数（只动眉毛、刘海等局部骨骼），
+  // HIDE/ 是内部换部件用的（眼睛、贴纸），test 是空动画；抽中这些会让角色看起来呆住。
   inst.actionPool = animations
-    .filter((a) => a.name !== inst.idleAnimation && !/idle/i.test(a.name))
+    .filter((a) => a.name.startsWith('ANIM/') && a.duration > 0 && a.name !== inst.idleAnimation)
     .map((a) => a.name)
   inst.autoPlaying = false
 

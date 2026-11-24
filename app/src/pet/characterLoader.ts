@@ -3,6 +3,7 @@ import { Spine, SpineTexture } from '@esotericsoftware/spine-pixi-v7'
 import {
   AnimationState,
   AnimationStateData,
+  Color,
   Physics,
   SkeletonBinary,
   AtlasAttachmentLoader,
@@ -69,7 +70,13 @@ function cloneAtlas(source: TextureAtlas): TextureAtlas {
 
 interface CharacterMeta {
   ActiveSkins?: { Items?: { Key: string; Value: string }[] }
-  SlotGroups?: { Name: string; TintColor: { r: number; g: number; b: number; a: number } }[]
+  SlotGroups?: {
+    Name: string
+    TintColor: { r: number; g: number; b: number; a: number }
+    /** RenderMode 为 2 表示双色渐变染色：暗部使用 TintBlackColor */
+    TintBlackColor?: { r: number; g: number; b: number; a: number }
+    RenderMode?: number
+  }[]
   /** EmoteLab 的滑杆取值，对应 CHAR/ 动画上的时间（秒） */
   SliderConstraints?: { Name: string; Value: number }[]
 }
@@ -136,17 +143,28 @@ function buildEmoteLabSkin(data: SkeletonData, meta: CharacterMeta): Skin {
   return skin
 }
 
-/** EmoteLab 用槽位名末尾的 [Group] 标记染色分组，颜色取自 SlotGroups.TintColor。 */
+/** EmoteLab 用槽位名末尾的 [Group] 标记染色分组，颜色取自 SlotGroups。 */
 function applySlotTints(data: SkeletonData, meta: CharacterMeta): void {
-  const tints = new Map((meta.SlotGroups ?? []).map((g) => [g.Name, g.TintColor]))
-  if (tints.size === 0) return
+  const groups = new Map((meta.SlotGroups ?? []).map((g) => [g.Name, g]))
+  if (groups.size === 0) return
 
   for (const slotData of data.slots) {
     const m = /\[([^\]]+)\]$/.exec(slotData.name)
     if (!m) continue
-    const tint = tints.get(m[1])
-    if (!tint) continue
+    const group = groups.get(m[1])
+    if (!group) continue
+
+    const tint = group.TintColor
     slotData.setupPose.color.set(tint.r, tint.g, tint.b, tint.a)
+
+    // 渐变发色贴图是白→黑灰度图，RenderMode 2 时暗部应染成 TintBlackColor。
+    // 必须在 Skeleton 构造前写入：Slot 只有在 setupPose.darkColor 非空时才会分配
+    // pose.darkColor，否则运行时会给暗部填黑色，导致发梢渐变发黑。
+    const dark = group.TintBlackColor
+    if (group.RenderMode === 2 && dark) {
+      if (!slotData.setupPose.darkColor) slotData.setupPose.darkColor = new Color()
+      slotData.setupPose.darkColor.set(dark.r, dark.g, dark.b, dark.a)
+    }
   }
 }
 
@@ -175,10 +193,15 @@ function applySliderConstraints(
     const leaf = item.Name.split('/').pop()
     if (!leaf) continue
 
-    const animation =
+    let animation =
       data.animations.find((a) => a.name === `CHAR/${leaf}`) ??
       data.animations.find((a) => a.name.split('/').pop() === leaf)
-    // 部分滑杆（如 MiddleBang_Length）在当前骨架里没有导出动画，直接跳过
+    // character.json 里中间刘海的滑杆写成 MiddleBang_*，骨架里的动画叫 BangMiddle_*
+    if (!animation && leaf.startsWith('MiddleBang')) {
+      const swapped = `BangMiddle${leaf.slice('MiddleBang'.length)}`
+      animation = data.animations.find((a) => a.name === `CHAR/${swapped}`)
+    }
+    // 骨架确实没有对应动画的滑杆才跳过
     if (!animation) continue
 
     const state = new AnimationState(stateData)
