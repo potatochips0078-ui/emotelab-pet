@@ -2,6 +2,7 @@ import { Application, Rectangle, Text } from 'pixi.js'
 import type { Spine } from '@esotericsoftware/spine-pixi-v7'
 import { loadCharacter } from './characterLoader'
 import type { CharacterInfo } from './characterLoader'
+import { logError, logWarn } from './logger'
 
 declare global {
   interface Window {
@@ -23,6 +24,7 @@ declare global {
       onBehavior: (cb: (behavior: BehaviorConfig) => void) => void
       resolveResource: (p: string) => Promise<string | null>
       resolveCharacterTextures: (id: string, names: string[]) => Promise<Record<string, string>>
+      log: (level: 'warn' | 'error', message: string) => void
     }
   }
 }
@@ -178,7 +180,7 @@ async function bootstrap(): Promise<void> {
     if (primary) playAnimation(primary, primary.idleAnimation)
   })
   window.petAPI.onStage((payload) => {
-    applyStage(payload).catch((err) => console.error('[Pet] apply stage failed:', err))
+    applyStage(payload).catch((err) => logError('[Pet] apply stage failed:', err))
   })
   window.petAPI.onBehavior((next) => {
     behavior = next
@@ -211,13 +213,13 @@ async function bootstrap(): Promise<void> {
   try {
     behavior = await window.petAPI.getBehavior()
   } catch (err) {
-    console.warn('[Pet] read behavior failed:', err)
+    logWarn('[Pet] read behavior failed:', err)
   }
 
   try {
     await applyStage(await window.petAPI.getStage())
   } catch (err) {
-    console.error('[Pet] FAILED to load stage:', err)
+    logError('[Pet] FAILED to load stage:', err)
     showError(`加载失败\n${(err as Error).message}`)
   }
 }
@@ -304,7 +306,7 @@ async function createInstance(
     }, 600)
     return inst
   } catch (err) {
-    console.error('[Pet] create instance failed:', item.character.id, err)
+    logError('[Pet] create instance failed:', item.character.id, err)
     return null
   }
 }
@@ -343,7 +345,7 @@ async function reloadInstance(
     moveCharacter(inst, local.x, local.y)
     measureVisualInsets(inst)
   } catch (err) {
-    console.error('[Pet] reload instance failed:', info.id, err)
+    logError('[Pet] reload instance failed:', info.id, err)
   }
 }
 
@@ -439,7 +441,7 @@ function applyCharacterPosition(inst: PetInstance): void {
 
 function playAnimation(inst: PetInstance, name: string, loop = true): void {
   if (!inst.spine.skeleton.data.findAnimation(name)) {
-    console.warn('[Pet] animation not found:', name)
+    logWarn('[Pet] animation not found:', name)
     return
   }
   inst.currentAnimation = name
@@ -1156,5 +1158,5 @@ function setupContextMenu(): void {
 }
 
 bootstrap().catch((e) => {
-  console.error('[Pet] bootstrap FAILED:', e)
+  logError('[Pet] bootstrap FAILED:', e)
 })

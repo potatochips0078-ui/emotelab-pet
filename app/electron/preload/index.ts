@@ -59,6 +59,8 @@ contextBridge.exposeInMainWorld('petAPI', {
   // 工坊角色自定义贴图：按 region 名批量解析实际存在的 PNG 地址
   resolveCharacterTextures: (id: string, names: string[]) =>
     ipcRenderer.invoke('pet:character-textures', { id, names }),
+  // 渲染进程关键日志落盘（主进程统一写 logs/pet.log）
+  log: (level: 'warn' | 'error', message: string) => ipcRenderer.send('pet:log', { level, message }),
 })
 
 // 设置页专用：与 petAPI 分开，避免两套页面互相依赖
@@ -77,6 +79,8 @@ contextBridge.exposeInMainWorld('settingsAPI', {
   // Steam 创意工坊角色
   listWorkshop: () => ipcRenderer.invoke('workshop:list'),
   addWorkshop: (id: string) => ipcRenderer.invoke('workshop:add', id),
+  // 渲染进程关键日志落盘（主进程统一写 logs/pet.log）
+  log: (level: 'warn' | 'error', message: string) => ipcRenderer.send('pet:log', { level, message }),
   onChange: (cb: (state: unknown) => void) => {
     ipcRenderer.on('settings:changed', (_e, state) => cb(state))
   },

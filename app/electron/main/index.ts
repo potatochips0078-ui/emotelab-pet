@@ -1363,6 +1363,14 @@ ipcMain.handle('pet:character-textures', (_e, payload: { id: string; names: stri
   return result
 })
 
+/** 渲染进程的关键告警：走被 setupFileLogging 接管过的 console，自动写进 pet.log */
+ipcMain.on('pet:log', (_e, payload: { level?: string; message?: string }) => {
+  const message = typeof payload?.message === 'string' ? payload.message.slice(0, 2000) : ''
+  if (!message) return
+  if (payload?.level === 'error') console.error('[Renderer]', message)
+  else console.warn('[Renderer]', message)
+})
+
 // --- 设置页 IPC ---
 
 ipcMain.handle('settings:get', () => settingsState())

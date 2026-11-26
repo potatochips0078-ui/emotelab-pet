@@ -1,8 +1,6 @@
 import { Assets } from 'pixi.js'
 import { Spine, SpineTexture } from '@esotericsoftware/spine-pixi-v7'
 import {
-  AnimationState,
-  AnimationStateData,
   Color,
   Physics,
   SkeletonBinary,
@@ -11,9 +9,11 @@ import {
   TextureAtlasPage,
   TextureAtlasRegion,
   Skin,
+  Slider,
 } from '@esotericsoftware/spine-core'
 import type { Application, Texture } from 'pixi.js'
 import type { Sequence, Skeleton, SkeletonData } from '@esotericsoftware/spine-core'
+import { logWarn } from './logger'
 
 /**
  * 同一份资源（按 URL）会被多个角色实例共用：骨架、基础图集、同名工坊贴图。
@@ -175,42 +175,28 @@ export interface LoadedCharacter {
 }
 
 /**
- * EmoteLab 把每个滑杆烘焙成一段 CHAR/xxx 动画，character.json 记录的是滑杆取值，
- * 也就是该动画上的时间。这些取值属于角色外观的一部分（耳朵位置、刘海长度等），
- * 不应用就会和编辑器里看到的姿态不一致。
+ * character.json 里的滑动条对应骨架内置的 Spine Slider 约束（Character/xxx），
+ * 取值就是该约束动画上的时间。Slider 会把动画以叠加方式应用到骨骼上，
+ * 并以自身的 setupPose.time 作为「等于默认姿态」的零点；
+ * 直接按绝对姿态播放 CHAR/xxx 动画会得到完全不同的幅度（例如把 0 当成极端姿态），
+ * 所以这里必须走骨架自带的 Slider，才能和 EmoteLab 里的显示一致。
  */
-function applySliderConstraints(
-  skeleton: Skeleton,
-  data: SkeletonData,
-  meta: CharacterMeta
-): void {
+function applySliderConstraints(skeleton: Skeleton, meta: CharacterMeta): void {
   const items = meta.SliderConstraints ?? []
   if (items.length === 0) return
 
-  const stateData = new AnimationStateData(data)
   for (const item of items) {
     if (!Number.isFinite(item.Value)) continue
-    const leaf = item.Name.split('/').pop()
-    if (!leaf) continue
-
-    let animation =
-      data.animations.find((a) => a.name === `CHAR/${leaf}`) ??
-      data.animations.find((a) => a.name.split('/').pop() === leaf)
-    // character.json 里中间刘海的滑杆写成 MiddleBang_*，骨架里的动画叫 BangMiddle_*
-    if (!animation && leaf.startsWith('MiddleBang')) {
-      const swapped = `BangMiddle${leaf.slice('MiddleBang'.length)}`
-      animation = data.animations.find((a) => a.name === `CHAR/${swapped}`)
-    }
-    // 骨架确实没有对应动画的滑杆才跳过
-    if (!animation) continue
-
-    const state = new AnimationState(stateData)
-    state.setAnimation(0, animation, false)
-    state.update(item.Value)
-    state.apply(skeleton)
-    // 逐个应用后立刻更新世界变换，后续滑杆若涉及约束才能拿到正确结果
-    skeleton.updateWorldTransform(Physics.update)
+    const slider = skeleton.constraints.find(
+      (c): c is Slider => c instanceof Slider && c.data.name === item.Name
+    )
+    // 骨架里没有这个滑杆就跳过（例如从别的模型带过来的配置）
+    if (!slider) continue
+    slider.pose.time = item.Value
+    slider.pose.mix = 1
   }
+  // Slider 在每次 updateWorldTransform 时自行应用，这里先算一次供后续测量包围盒
+  skeleton.updateWorldTransform(Physics.update)
 }
 
 /** 收集皮肤实际引用的 atlas region 名，只按需加载工坊贴图 */
@@ -246,7 +232,7 @@ async function applyCustomTextures(
   try {
     resolved = await window.petAPI.resolveCharacterTextures(info.id, names)
   } catch (e) {
-    console.warn('[Pet] 解析工坊贴图失败:', e)
+    logWarn('[Pet] 解析工坊贴图失败:', e)
     return
   }
 
@@ -258,7 +244,7 @@ async function applyCustomTextures(
     try {
       const texture = await acquireTexture(src)
       if (texture.width !== old.originalWidth || texture.height !== old.originalHeight) {
-        console.warn(
+        logWarn(
           '[Pet] 工坊贴图尺寸与图集不一致，跳过:',
           name,
           `${texture.width}x${texture.height}`,
@@ -297,7 +283,7 @@ async function applyCustomTextures(
 
       replacements.set(name, region)
     } catch (e) {
-      console.warn('[Pet] 加载工坊贴图失败:', name, e)
+      logWarn('[Pet] 加载工坊贴图失败:', name, e)
     }
   }
 
@@ -385,7 +371,7 @@ export async function loadCharacter(
   spine.skeleton.setSkin(compositeSkin)
   spine.skeleton.setupPose()
   // 滑杆姿态必须在皮肤就绪后应用，并且要早于渲染层测量包围盒
-  applySliderConstraints(spine.skeleton, skeletonData, meta)
+  applySliderConstraints(spine.skeleton, meta)
 
   return { spine, dispose }
 }

@@ -137,6 +137,7 @@ export interface ExtractedElpack {
 /**
  * 解出工坊角色包：预设 JSON 写成 character.json，Regions/**.png 按原路径落盘。
  * 注意 Regions/WeightTransfer/*.png 不是辅助文件，它们是自定义皮肤真正的可见外观。
+ * 纯预设包（IsUsingCustomTexture=false）不带贴图，复用内置 CoffeeBean 贴图，同样允许导入。
  */
 export function extractElpack(file: string, targetDir: string): ExtractedElpack {
   const buf = readFileSync(file)
@@ -160,14 +161,29 @@ export function extractElpack(file: string, targetDir: string): ExtractedElpack 
     const rel = safeRelative(e.name)
     return rel && /^Regions\/[^/].*\.png$/i.test(rel)
   })
-  if (regionEntries.length === 0) throw new Error('角色包中没有找到自定义贴图')
+
+  let presetData: Buffer | null = null
+  if (regionEntries.length === 0) {
+    // 没有贴图时只有两种可能：纯预设包（合法），或声明用了自定义贴图却漏了图（损坏包）
+    presetData = readEntryData(buf, payloadStart, jsonEntry)
+    let usesCustomTexture = false
+    try {
+      const parsed = JSON.parse(presetData.toString('utf8').replace(/^\uFEFF/, '')) as {
+        IsUsingCustomTexture?: unknown
+      }
+      usesCustomTexture = parsed.IsUsingCustomTexture === true
+    } catch {
+      throw new Error('角色包中没有找到自定义贴图')
+    }
+    if (usesCustomTexture) throw new Error('角色包中没有找到自定义贴图')
+  }
 
   let total = 0
   mkdirSync(targetDir, { recursive: true })
   // 重新解包时先清掉旧贴图，避免残留已删除的 region
   rmSync(join(targetDir, 'Regions'), { recursive: true, force: true })
 
-  const preset = readEntryData(buf, payloadStart, jsonEntry)
+  const preset = presetData ?? readEntryData(buf, payloadStart, jsonEntry)
   writeFileSync(join(targetDir, 'character.json'), preset)
 
   let regionCount = 0

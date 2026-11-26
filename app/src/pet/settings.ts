@@ -1,3 +1,5 @@
+import { logError } from './logger'
+
 interface CharacterSummary {
   id: string
   name: string
@@ -56,6 +58,7 @@ interface SettingsAPI {
   removeInstance: (instanceId: string) => Promise<SettingsState>
   listWorkshop: () => Promise<WorkshopItem[]>
   addWorkshop: (id: string) => Promise<SettingsState>
+  log: (level: 'warn' | 'error', message: string) => void
   onChange: (cb: (state: SettingsState) => void) => void
 }
 
@@ -187,7 +190,7 @@ async function loadWorkshop(force = false): Promise<void> {
   try {
     workshopItems = await window.settingsAPI.listWorkshop()
   } catch (err) {
-    console.error('[Settings] workshop scan failed:', err)
+    logError('[Settings] workshop scan failed:', err)
     workshopItems = []
   } finally {
     workshopLoading = false
@@ -544,7 +547,7 @@ async function init(): Promise<void> {
 }
 
 init().catch((err) => {
-  console.error('[Settings] init failed:', err)
+  logError('[Settings] init failed:', err)
   document.body.textContent = `设置加载失败：${(err as Error).message}`
 })
 
